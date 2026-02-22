@@ -62,7 +62,8 @@ export class SampleRequestController {
    */
   async findById(req: Request, res: Response, next: NextFunction) {
     try {
-      const sampleRequest = await sampleRequestService.findById(req.params.id);
+      const id = req.params.id as string;
+      const sampleRequest = await sampleRequestService.findById(id);
       handleResponse(
         res,
         200,
@@ -80,10 +81,8 @@ export class SampleRequestController {
    */
   async update(req: Request, res: Response, next: NextFunction) {
     try {
-      const sampleRequest = await sampleRequestService.update(
-        req.params.id,
-        req.body,
-      );
+      const id = req.params.id as string;
+      const sampleRequest = await sampleRequestService.update(id, req.body);
       handleResponse(
         res,
         200,
@@ -101,7 +100,8 @@ export class SampleRequestController {
    */
   async updateItemStatus(req: Request, res: Response, next: NextFunction) {
     try {
-      const { requestId, itemId } = req.params;
+      const requestId = req.params.requestId as string;
+      const itemId = req.params.itemId as string;
       const { status } = req.body;
       const userId = req.user!.userId;
 
@@ -128,7 +128,8 @@ export class SampleRequestController {
    */
   async delete(req: Request, res: Response, next: NextFunction) {
     try {
-      await sampleRequestService.delete(req.params.id);
+      const id = req.params.id as string;
+      await sampleRequestService.delete(id);
       handleResponse(res, 200, "Sample request deleted successfully");
     } catch (error) {
       next(error);

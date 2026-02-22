@@ -23,8 +23,8 @@ export class AuthService {
         });
         // Return user without password field
         const userObject = user.toObject();
-        delete userObject.password;
-        return userObject;
+        const { password, ...userWithoutPassword } = userObject;
+        return userWithoutPassword;
     }
     /**
      * Login user with credentials and return JWT token
@@ -36,20 +36,24 @@ export class AuthService {
         // Find user by email with password field
         const user = await userRepository.findByEmail(credentials.email);
         if (!user) {
+            // Log authentication failure without exposing credentials
+            console.warn(`⚠ Login failed: User not found - Email: ${credentials.email}`);
             throw new Error("Invalid credentials");
         }
         // Verify password
         const isPasswordValid = await this.verifyPassword(credentials.password, user.password);
         if (!isPasswordValid) {
+            // Log authentication failure without exposing password
+            console.warn(`⚠ Login failed: Invalid password - Email: ${credentials.email}`);
             throw new Error("Invalid credentials");
         }
         // Generate JWT token
         const token = this.generateToken(user);
         // Return user without password and token
         const userObject = user.toObject();
-        delete userObject.password;
+        const { password, ...userWithoutPassword } = userObject;
         return {
-            user: userObject,
+            user: userWithoutPassword,
             token,
         };
     }
@@ -64,6 +68,7 @@ export class AuthService {
             email: user.email,
             role: user.role,
         };
+        // @ts-ignore - JWT type definitions have complex overloads
         return jwt.sign(payload, config.jwt.secret, {
             expiresIn: config.jwt.expiresIn,
         });

@@ -1,5 +1,6 @@
 import ImageKit from "imagekit";
 import { config } from "../config/index.js";
+import { PayloadTooLargeError } from "../middleware/errorHandler.js";
 /**
  * Upload Service
  * Handles file uploads to ImageKit CDN
@@ -42,13 +43,13 @@ class UploadService {
     /**
      * Validate file type and size
      * @param file - Multer file object
-     * @throws Error if validation fails
+     * @throws PayloadTooLargeError if file exceeds size limit
      */
     validateFile(file) {
         const maxSize = 5 * 1024 * 1024; // 5MB in bytes
         // Check file size
         if (file.size > maxSize) {
-            throw new Error(`File ${file.originalname} exceeds maximum size of 5MB`);
+            throw new PayloadTooLargeError(`File ${file.originalname} exceeds maximum size of 5MB`);
         }
         // Optional: Add file type validation if needed
         // const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];

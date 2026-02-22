@@ -47,7 +47,8 @@ export class SampleRequestController {
      */
     async findById(req, res, next) {
         try {
-            const sampleRequest = await sampleRequestService.findById(req.params.id);
+            const id = req.params.id;
+            const sampleRequest = await sampleRequestService.findById(id);
             handleResponse(res, 200, "Sample request retrieved successfully", sampleRequest);
         }
         catch (error) {
@@ -60,7 +61,8 @@ export class SampleRequestController {
      */
     async update(req, res, next) {
         try {
-            const sampleRequest = await sampleRequestService.update(req.params.id, req.body);
+            const id = req.params.id;
+            const sampleRequest = await sampleRequestService.update(id, req.body);
             handleResponse(res, 200, "Sample request updated successfully", sampleRequest);
         }
         catch (error) {
@@ -73,7 +75,8 @@ export class SampleRequestController {
      */
     async updateItemStatus(req, res, next) {
         try {
-            const { requestId, itemId } = req.params;
+            const requestId = req.params.requestId;
+            const itemId = req.params.itemId;
             const { status } = req.body;
             const userId = req.user.userId;
             const sampleRequest = await sampleRequestService.updateItemStatus(requestId, itemId, status, userId);
@@ -89,7 +92,8 @@ export class SampleRequestController {
      */
     async delete(req, res, next) {
         try {
-            await sampleRequestService.delete(req.params.id);
+            const id = req.params.id;
+            await sampleRequestService.delete(id);
             handleResponse(res, 200, "Sample request deleted successfully");
         }
         catch (error) {

@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { config } from "../config/index.js";
 import { AuthenticationError } from "./errorHandler.js";
+import { Role } from "../types/enums.js";
 
 /**
  * Authentication Middleware
@@ -53,14 +54,14 @@ export const authenticate = (
     const decoded = jwt.verify(token, config.jwt.secret) as {
       userId: string;
       email: string;
-      role: "ADMIN" | "SAMPLING_HEAD" | "SALES";
+      role: string;
     };
 
     // Attach decoded user information to request
     req.user = {
       userId: decoded.userId,
       email: decoded.email,
-      role: decoded.role,
+      role: decoded.role as Role,
     };
 
     // Proceed to next middleware

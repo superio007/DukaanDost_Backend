@@ -20,7 +20,7 @@ declare class UploadService {
     /**
      * Validate file type and size
      * @param file - Multer file object
-     * @throws Error if validation fails
+     * @throws PayloadTooLargeError if file exceeds size limit
      */
     validateFile(file: Express.Multer.File): void;
 }

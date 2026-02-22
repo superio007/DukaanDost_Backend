@@ -29,6 +29,9 @@ export declare class NotFoundError extends AppError {
 export declare class ConflictError extends AppError {
     constructor(message?: string);
 }
+export declare class PayloadTooLargeError extends AppError {
+    constructor(message?: string);
+}
 declare const errorHandler: (err: any, req: Request, res: Response, next: NextFunction) => Response<any, Record<string, any>> | undefined;
 export default errorHandler;
 //# sourceMappingURL=errorHandler.d.ts.map

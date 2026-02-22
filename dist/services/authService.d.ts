@@ -10,16 +10,7 @@ export declare class AuthService {
      * @returns Created user document (without password)
      * @throws Error if email already exists or validation fails
      */
-    register(userData: RegisterDTO): Promise<{
-        email: string;
-        name: string;
-        password: string;
-        role: import("../types/enums.js").Role;
-    } & import("mongoose").DefaultTimestampProps & {
-        _id: import("mongoose").Types.ObjectId;
-    } & {
-        __v: number;
-    }>;
+    register(userData: RegisterDTO): Promise<any>;
     /**
      * Login user with credentials and return JWT token
      * @param credentials - Login credentials (email, password)
@@ -27,16 +18,7 @@ export declare class AuthService {
      * @throws Error if credentials are invalid
      */
     login(credentials: LoginDTO): Promise<{
-        user: {
-            email: string;
-            name: string;
-            password: string;
-            role: import("../types/enums.js").Role;
-        } & import("mongoose").DefaultTimestampProps & {
-            _id: import("mongoose").Types.ObjectId;
-        } & {
-            __v: number;
-        };
+        user: any;
         token: string;
     }>;
     /**

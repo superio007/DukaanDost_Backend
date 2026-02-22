@@ -29,10 +29,10 @@ export class AuthService {
     });
 
     // Return user without password field
-    const userObject = user.toObject();
-    delete userObject.password;
+    const userObject = user.toObject() as any;
+    const { password, ...userWithoutPassword } = userObject;
 
-    return userObject;
+    return userWithoutPassword;
   }
 
   /**
@@ -71,11 +71,11 @@ export class AuthService {
     const token = this.generateToken(user);
 
     // Return user without password and token
-    const userObject = user.toObject();
-    delete userObject.password;
+    const userObject = user.toObject() as any;
+    const { password, ...userWithoutPassword } = userObject;
 
     return {
-      user: userObject,
+      user: userWithoutPassword,
       token,
     };
   }
@@ -92,6 +92,7 @@ export class AuthService {
       role: user.role,
     };
 
+    // @ts-ignore - JWT type definitions have complex overloads
     return jwt.sign(payload, config.jwt.secret, {
       expiresIn: config.jwt.expiresIn,
     });

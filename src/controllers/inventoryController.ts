@@ -48,7 +48,8 @@ export class InventoryController {
    */
   async update(req: Request, res: Response, next: NextFunction) {
     try {
-      const inventory = await inventoryService.update(req.params.id, req.body);
+      const id = req.params.id as string;
+      const inventory = await inventoryService.update(id, req.body);
       handleResponse(res, 200, "Inventory updated successfully", inventory);
     } catch (error) {
       next(error);
