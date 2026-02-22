@@ -4,11 +4,12 @@ import { validateRequest } from "../middleware/validateRequest.js";
 
 /**
  * Validator for creating sample requests
- * Requirements: 4.2, 4.3, 4.4, 4.5, 14.1, 14.2, 14.3
+ * Requirements: 4.2, 4.3, 4.4, 4.5, 14.1, 14.2, 14.3, 30.1, 30.2
  */
 export const createSampleRequestValidator = [
   body("buyerName")
     .trim()
+    .escape()
     .notEmpty()
     .withMessage("Buyer name is required")
     .isString()
@@ -16,6 +17,7 @@ export const createSampleRequestValidator = [
 
   body("contactPerson")
     .trim()
+    .escape()
     .notEmpty()
     .withMessage("Contact person is required")
     .isString()
@@ -41,6 +43,7 @@ export const createSampleRequestValidator = [
 
   body("items.*.fabricName")
     .trim()
+    .escape()
     .notEmpty()
     .withMessage("Fabric name is required for each item")
     .isString()
@@ -48,6 +51,7 @@ export const createSampleRequestValidator = [
 
   body("items.*.color")
     .trim()
+    .escape()
     .notEmpty()
     .withMessage("Color is required for each item")
     .isString()
@@ -92,12 +96,13 @@ export const createSampleRequestValidator = [
 
 /**
  * Validator for updating sample requests
- * Requirements: 6.2, 14.1, 14.2, 14.3
+ * Requirements: 6.2, 14.1, 14.2, 14.3, 30.1, 30.2
  */
 export const updateSampleRequestValidator = [
   body("buyerName")
     .optional()
     .trim()
+    .escape()
     .notEmpty()
     .withMessage("Buyer name cannot be empty")
     .isString()
@@ -106,6 +111,7 @@ export const updateSampleRequestValidator = [
   body("contactPerson")
     .optional()
     .trim()
+    .escape()
     .notEmpty()
     .withMessage("Contact person cannot be empty")
     .isString()
@@ -178,6 +184,37 @@ export const paginationValidator = [
     .optional()
     .isInt({ min: 1, max: 100 })
     .withMessage("Limit must be a positive integer with maximum of 100"),
+
+  validateRequest,
+];
+
+/**
+ * Validator for sample request filter parameters
+ * Requirements: 30.1, 30.2, 30.3, 30.4
+ */
+export const filterValidator = [
+  query("buyerName")
+    .optional()
+    .trim()
+    .escape()
+    .isString()
+    .withMessage("Buyer name must be a string"),
+
+  query("status")
+    .optional()
+    .trim()
+    .isIn(Object.values(ItemStatus))
+    .withMessage(
+      `Status must be one of: ${Object.values(ItemStatus).join(", ")}`,
+    ),
+
+  query("priority")
+    .optional()
+    .trim()
+    .isIn(Object.values(Priority))
+    .withMessage(
+      `Priority must be one of: ${Object.values(Priority).join(", ")}`,
+    ),
 
   validateRequest,
 ];

@@ -39,9 +39,14 @@ export class SampleRequestRepository {
       const { page = 1, limit = 10 } = pagination;
       const query: any = {};
 
-      // Apply filters
+      // Apply filters with sanitization to prevent NoSQL injection
       if (filters.buyerName) {
-        query.buyerName = { $regex: filters.buyerName, $options: "i" }; // Case-insensitive partial match
+        // Escape special regex characters to prevent regex injection
+        const sanitizedBuyerName = filters.buyerName.replace(
+          /[.*+?^${}()|[\]\\]/g,
+          "\\$&",
+        );
+        query.buyerName = { $regex: sanitizedBuyerName, $options: "i" }; // Case-insensitive partial match
       }
       if (filters.priority) {
         query.priority = filters.priority;

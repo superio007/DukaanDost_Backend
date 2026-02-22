@@ -3,11 +3,12 @@ import { validateRequest } from "../middleware/validateRequest.js";
 
 /**
  * Validator for user registration
- * Requirements: 1.2, 1.4, 1.6, 2.2, 2.6, 14.1, 14.4, 30.1
+ * Requirements: 1.2, 1.4, 1.6, 2.2, 2.6, 14.1, 14.4, 30.1, 30.2
  */
 export const registerValidator = [
   body("name")
     .trim()
+    .escape()
     .notEmpty()
     .withMessage("Name is required")
     .isString()
@@ -19,7 +20,8 @@ export const registerValidator = [
     .withMessage("Email is required")
     .isEmail()
     .withMessage("Invalid email format")
-    .normalizeEmail(),
+    .normalizeEmail()
+    .toLowerCase(),
 
   body("password")
     .notEmpty()
@@ -38,7 +40,7 @@ export const registerValidator = [
 
 /**
  * Validator for user login
- * Requirements: 2.2, 2.6, 14.1, 14.4
+ * Requirements: 2.2, 2.6, 14.1, 14.4, 30.1, 30.2
  */
 export const loginValidator = [
   body("email")
@@ -47,7 +49,8 @@ export const loginValidator = [
     .withMessage("Email is required")
     .isEmail()
     .withMessage("Invalid email format")
-    .normalizeEmail(),
+    .normalizeEmail()
+    .toLowerCase(),
 
   body("password").notEmpty().withMessage("Password is required"),
 

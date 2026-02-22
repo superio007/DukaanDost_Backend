@@ -46,6 +46,10 @@ export class AuthService {
     const user = await userRepository.findByEmail(credentials.email);
 
     if (!user) {
+      // Log authentication failure without exposing credentials
+      console.warn(
+        `⚠ Login failed: User not found - Email: ${credentials.email}`,
+      );
       throw new Error("Invalid credentials");
     }
 
@@ -56,6 +60,10 @@ export class AuthService {
     );
 
     if (!isPasswordValid) {
+      // Log authentication failure without exposing password
+      console.warn(
+        `⚠ Login failed: Invalid password - Email: ${credentials.email}`,
+      );
       throw new Error("Invalid credentials");
     }
 

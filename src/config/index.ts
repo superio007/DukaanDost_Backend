@@ -31,6 +31,17 @@ export const validateEnv = (): void => {
     );
     process.exit(1);
   }
+
+  // Validate CORS_ORIGIN is set in production (not wildcard)
+  if (process.env.NODE_ENV === "production" && !process.env.CORS_ORIGIN) {
+    console.error(
+      "CORS_ORIGIN must be set to a specific origin in production (not wildcard '*')",
+    );
+    console.error(
+      "Please set CORS_ORIGIN in your .env file to your frontend application URL.",
+    );
+    process.exit(1);
+  }
 };
 
 /**
@@ -62,7 +73,9 @@ export const config = {
 
   // CORS configuration
   cors: {
-    origin: process.env.CORS_ORIGIN || "*",
+    origin:
+      process.env.CORS_ORIGIN ||
+      (process.env.NODE_ENV === "production" ? undefined : "*"),
   },
 
   // Security configuration

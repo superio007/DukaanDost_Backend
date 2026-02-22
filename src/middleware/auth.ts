@@ -24,11 +24,17 @@ export const authenticate = (
 
     // Check if Authorization header exists
     if (!authHeader) {
+      console.warn(
+        `⚠ Authentication failed: No token provided - ${req.method} ${req.path}`,
+      );
       throw new AuthenticationError("No token provided");
     }
 
     // Check if header follows "Bearer <token>" format
     if (!authHeader.startsWith("Bearer ")) {
+      console.warn(
+        `⚠ Authentication failed: Invalid token format - ${req.method} ${req.path}`,
+      );
       throw new AuthenticationError("Invalid token format");
     }
 
@@ -37,6 +43,9 @@ export const authenticate = (
 
     // Check if token exists after "Bearer "
     if (!token) {
+      console.warn(
+        `⚠ Authentication failed: No token provided - ${req.method} ${req.path}`,
+      );
       throw new AuthenticationError("No token provided");
     }
 
@@ -59,14 +68,23 @@ export const authenticate = (
   } catch (error) {
     // Handle JWT-specific errors
     if (error instanceof jwt.JsonWebTokenError) {
+      console.warn(
+        `⚠ Authentication failed: Invalid token - ${req.method} ${req.path}`,
+      );
       next(new AuthenticationError("Invalid token"));
     } else if (error instanceof jwt.TokenExpiredError) {
+      console.warn(
+        `⚠ Authentication failed: Token expired - ${req.method} ${req.path}`,
+      );
       next(new AuthenticationError("Token expired"));
     } else if (error instanceof AuthenticationError) {
-      // Pass through our custom authentication errors
+      // Pass through our custom authentication errors (already logged above)
       next(error);
     } else {
       // Handle unexpected errors
+      console.error(
+        `✗ Authentication error: ${error instanceof Error ? error.message : "Unknown error"} - ${req.method} ${req.path}`,
+      );
       next(new AuthenticationError("Authentication failed"));
     }
   }

@@ -8,6 +8,7 @@ import {
   updateSampleRequestValidator,
   updateItemStatusValidator,
   paginationValidator,
+  filterValidator,
 } from "../validators/sampleRequestValidators.js";
 
 const router = Router();
@@ -32,12 +33,13 @@ router.post(
  * Get all sample requests with filtering and pagination
  * Auth: Required
  * Roles: All authenticated users
- * Requirements: 5.1, 5.5
+ * Requirements: 5.1, 5.5, 30.3, 30.4
  */
 router.get(
   "/",
   authenticate,
   paginationValidator,
+  filterValidator,
   sampleRequestController.findAll.bind(sampleRequestController),
 );
 

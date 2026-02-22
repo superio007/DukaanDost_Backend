@@ -3,11 +3,12 @@ import { validateRequest } from "../middleware/validateRequest.js";
 
 /**
  * Validator for creating inventory records
- * Requirements: 9.2, 9.3, 14.1, 14.3
+ * Requirements: 9.2, 9.3, 14.1, 14.3, 30.1, 30.2
  */
 export const createInventoryValidator = [
   body("fabricName")
     .trim()
+    .escape()
     .notEmpty()
     .withMessage("Fabric name is required")
     .isString()
@@ -15,6 +16,7 @@ export const createInventoryValidator = [
 
   body("color")
     .trim()
+    .escape()
     .notEmpty()
     .withMessage("Color is required")
     .isString()
