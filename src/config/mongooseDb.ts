@@ -7,7 +7,7 @@ const connectDB = async (): Promise<void> => {
   if (mongoose.connection.readyState === 1) return;
 
   await mongoose.connect(process.env.MONGO_URI as string, {
-    dbName: "curaEdge",
+    dbName: "DukaanDost",
     maxPoolSize: 20,
     minPoolSize: 5,
     serverSelectionTimeoutMS: 5000,
