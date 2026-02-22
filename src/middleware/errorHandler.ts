@@ -61,7 +61,7 @@ export class ConflictError extends AppError {
 
 // Global error handler middleware
 const errorHandler = (
-  err: Error,
+  err: any,
   req: Request,
   res: Response,
   next: NextFunction,
@@ -74,6 +74,69 @@ const errorHandler = (
       success: false,
       message: err.message,
       ...(err.errors && { errors: err.errors }),
+    });
+  }
+
+  // Handle MongoDB duplicate key errors (11000)
+  if (err.code === 11000) {
+    const field = Object.keys(err.keyPattern || {})[0];
+    const message =
+      field === "email" ? "Email already exists" : `Duplicate ${field} value`;
+    return res.status(409).json({
+      success: false,
+      message,
+    });
+  }
+
+  // Handle Mongoose ValidationError
+  if (err.name === "ValidationError") {
+    const errors = Object.values(err.errors || {}).map((error: any) => ({
+      field: error.path,
+      message: error.message,
+    }));
+    return res.status(400).json({
+      success: false,
+      message: "Validation failed",
+      errors,
+    });
+  }
+
+  // Handle Mongoose CastError (invalid ObjectId)
+  if (err.name === "CastError") {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid ID format",
+    });
+  }
+
+  // Handle JWT errors
+  if (err.name === "JsonWebTokenError") {
+    return res.status(401).json({
+      success: false,
+      message: "Invalid token",
+    });
+  }
+
+  if (err.name === "TokenExpiredError") {
+    return res.status(401).json({
+      success: false,
+      message: "Token expired",
+    });
+  }
+
+  // Handle generic "Invalid credentials" error
+  if (err.message === "Invalid credentials") {
+    return res.status(401).json({
+      success: false,
+      message: "Invalid credentials",
+    });
+  }
+
+  // Handle insufficient stock errors
+  if (err.message && err.message.includes("Insufficient stock")) {
+    return res.status(409).json({
+      success: false,
+      message: err.message,
     });
   }
 
