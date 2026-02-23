@@ -39,6 +39,18 @@ router.get(
 );
 
 /**
+ * GET /api/inventory/:id
+ * Get a single inventory record by ID
+ * Auth: Required
+ * Roles: All authenticated users
+ */
+router.get(
+  "/:id",
+  authenticate,
+  inventoryController.findById.bind(inventoryController),
+);
+
+/**
  * PUT /api/inventory/:id
  * Update inventory record
  * Auth: Required

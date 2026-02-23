@@ -40,6 +40,23 @@ export class InventoryController {
   }
 
   /**
+   * Retrieve a single inventory record by ID
+   * GET /api/inventory/:id
+   * @param req - Express request with id in params
+   * @param res - Express response
+   * @param next - Express next function for error handling
+   */
+  async findById(req: Request, res: Response, next: NextFunction) {
+    try {
+      const id = req.params.id as string;
+      const inventory = await inventoryService.findById(id);
+      handleResponse(res, 200, "Inventory retrieved successfully", inventory);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
    * Update inventory record
    * PUT /api/inventory/:id
    * @param req - Express request with UpdateInventoryDTO in body and id in params

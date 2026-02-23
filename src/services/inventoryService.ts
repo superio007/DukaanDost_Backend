@@ -26,6 +26,20 @@ export class InventoryService {
   }
 
   /**
+   * Retrieve a single inventory record by ID
+   * @param id - Inventory ID
+   * @returns Inventory document
+   * @throws Error if inventory not found
+   */
+  async findById(id: string) {
+    const inventory = await inventoryRepository.findById(id);
+    if (!inventory) {
+      throw new Error("Inventory not found");
+    }
+    return inventory;
+  }
+
+  /**
    * Update inventory record
    * @param id - Inventory ID
    * @param updateData - Fields to update (availableMeters)

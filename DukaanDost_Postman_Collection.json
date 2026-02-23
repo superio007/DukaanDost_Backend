@@ -171,6 +171,37 @@
           "response": []
         },
         {
+          "name": "Get Inventory by ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/inventory/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "inventory", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "699afebb269a3e6cf4f9fa64",
+                  "description": "Inventory ID"
+                }
+              ]
+            },
+            "description": "Get a single inventory record by ID (All authenticated users)"
+          },
+          "response": []
+        },
+        {
           "name": "Update Inventory",
           "request": {
             "auth": {

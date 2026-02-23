@@ -108,6 +108,25 @@ export class InventoryRepository {
   }
 
   /**
+   * Find inventory by ID
+   * @param id - Inventory ID (ObjectId or string)
+   * @returns Inventory document, or null if not found
+   * @throws CastError if invalid ObjectId format
+   */
+  async findById(id: string | Types.ObjectId) {
+    try {
+      const inventory = await Inventory.findById(id);
+      return inventory;
+    } catch (error: any) {
+      // Handle CastError for invalid ObjectId
+      if (error.name === "CastError") {
+        throw error;
+      }
+      throw error;
+    }
+  }
+
+  /**
    * Find inventory by fabric specifications
    * @param fabricName - Fabric name
    * @param color - Fabric color
