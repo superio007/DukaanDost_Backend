@@ -60,13 +60,13 @@ router.get(
  * PUT /api/sample-requests/:id
  * Update sample request
  * Auth: Required
- * Roles: ADMIN
+ * Roles: SAMPLING_HEAD, ADMIN
  * Requirements: 6.1
  */
 router.put(
   "/:id",
   authenticate,
-  authorize(Role.ADMIN),
+  authorize(Role.SAMPLING_HEAD, Role.ADMIN),
   updateSampleRequestValidator,
   sampleRequestController.update.bind(sampleRequestController),
 );

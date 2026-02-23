@@ -139,6 +139,59 @@ export const updateSampleRequestValidator = [
     .isString()
     .withMessage("Each attachment must be a string URL"),
 
+  body("items").optional().isArray().withMessage("Items must be an array"),
+
+  body("items.*._id")
+    .optional()
+    .isMongoId()
+    .withMessage("Item ID must be a valid MongoDB ObjectId"),
+
+  body("items.*.fabricName")
+    .optional()
+    .trim()
+    .escape()
+    .notEmpty()
+    .withMessage("Fabric name cannot be empty")
+    .isString()
+    .withMessage("Fabric name must be a string"),
+
+  body("items.*.color")
+    .optional()
+    .trim()
+    .escape()
+    .notEmpty()
+    .withMessage("Color cannot be empty")
+    .isString()
+    .withMessage("Color must be a string"),
+
+  body("items.*.gsm")
+    .optional()
+    .isNumeric()
+    .withMessage("GSM must be a number")
+    .custom((value) => value >= 0)
+    .withMessage("GSM must be non-negative"),
+
+  body("items.*.requiredMeters")
+    .optional()
+    .isNumeric()
+    .withMessage("Required meters must be a number")
+    .custom((value) => value > 0)
+    .withMessage("Required meters must be positive"),
+
+  body("items.*.availableMeters")
+    .optional()
+    .isNumeric()
+    .withMessage("Available meters must be a number")
+    .custom((value) => value >= 0)
+    .withMessage("Available meters must be non-negative"),
+
+  body("items.*.status")
+    .optional()
+    .isIn(Object.values(ItemStatus))
+    .withMessage(
+      `Status must be one of: ${Object.values(ItemStatus).join(", ")}`,
+    ),
+
   validateRequest,
 ];
 

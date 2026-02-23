@@ -35,6 +35,15 @@ export interface UpdateSampleRequestDTO {
   requiredByDate?: string;
   priority?: Priority;
   attachments?: string[];
+  items?: Array<{
+    _id?: string;
+    fabricName?: string;
+    color?: string;
+    gsm?: number;
+    requiredMeters?: number;
+    availableMeters?: number;
+    status?: ItemStatus;
+  }>;
 }
 
 export interface CreateInventoryDTO {

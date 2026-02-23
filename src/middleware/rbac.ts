@@ -29,11 +29,20 @@ export const authorize = (...roles: Role[]) => {
         throw new AuthorizationError("Authentication required");
       }
 
+      // Debug logging
+      console.log(
+        `🔐 Authorization check: User role: ${req.user.role}, Allowed roles: ${roles.join(", ")}`,
+      );
+
       // Check if user's role is in the allowed roles array
       if (!roles.includes(req.user.role)) {
+        console.log(
+          `❌ Authorization failed: ${req.user.role} not in [${roles.join(", ")}]`,
+        );
         throw new AuthorizationError("Insufficient permissions");
       }
 
+      console.log(`✓ Authorization successful for ${req.user.role}`);
       // User has required role, proceed to next middleware
       next();
     } catch (error) {
