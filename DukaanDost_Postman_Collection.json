@@ -1,0 +1,519 @@
+{
+  "info": {
+    "name": "DukaanDost Backend API",
+    "description": "Complete API collection for DukaanDost fabric sample ERP system",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5173",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.token) {",
+                  "        pm.collectionVariables.set('token', response.data.token);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Admin User\",\n  \"email\": \"admin@dukaandost.com\",\n  \"password\": \"admin123\",\n  \"role\": \"ADMIN\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            },
+            "description": "Register a new user. Roles: ADMIN, SAMPLING_HEAD, SALES"
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.token) {",
+                  "        pm.collectionVariables.set('token', response.data.token);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@dukaandost.com\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Login and receive JWT token"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Inventory",
+      "item": [
+        {
+          "name": "Create Inventory",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fabricName\": \"Cotton Blend\",\n  \"color\": \"Navy Blue\",\n  \"gsm\": 180,\n  \"availableMeters\": 500\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/inventory",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "inventory"]
+            },
+            "description": "Create new inventory record (ADMIN only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Inventory",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/inventory",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "inventory"]
+            },
+            "description": "Get all inventory records (All authenticated users)"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Inventory",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fabricName\": \"Cotton Blend\",\n  \"color\": \"Navy Blue\",\n  \"gsm\": 180,\n  \"availableMeters\": 450\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/inventory/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "inventory", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "INVENTORY_ID_HERE"
+                }
+              ]
+            },
+            "description": "Update inventory record (ADMIN only)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Sample Requests",
+      "item": [
+        {
+          "name": "Create Sample Request",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"buyerName\": \"ABC Garments Ltd\",\n  \"contactPerson\": \"John Doe\",\n  \"requiredByDate\": \"2026-03-15\",\n  \"priority\": \"HIGH\",\n  \"items\": [\n    {\n      \"fabricName\": \"Cotton Blend\",\n      \"color\": \"Navy Blue\",\n      \"gsm\": 180,\n      \"requiredMeters\": 10,\n      \"availableMeters\": 500\n    },\n    {\n      \"fabricName\": \"Polyester\",\n      \"color\": \"Black\",\n      \"gsm\": 150,\n      \"requiredMeters\": 5,\n      \"availableMeters\": 300\n    }\n  ],\n  \"attachments\": [\n    \"https://example.com/design1.jpg\",\n    \"https://example.com/design2.jpg\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/sample-requests",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sample-requests"]
+            },
+            "description": "Create new sample request (SALES, ADMIN)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Sample Requests",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/sample-requests?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sample-requests"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "priority",
+                  "value": "HIGH",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "REQUESTED",
+                  "disabled": true
+                },
+                {
+                  "key": "buyerName",
+                  "value": "ABC",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Get all sample requests with pagination and filters"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Sample Request by ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/sample-requests/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sample-requests", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "REQUEST_ID_HERE"
+                }
+              ]
+            },
+            "description": "Get sample request by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Sample Request",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"buyerName\": \"ABC Garments Ltd\",\n  \"contactPerson\": \"Jane Smith\",\n  \"requiredByDate\": \"2026-03-20\",\n  \"priority\": \"MEDIUM\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/sample-requests/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sample-requests", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "REQUEST_ID_HERE"
+                }
+              ]
+            },
+            "description": "Update sample request (ADMIN only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Sample Request",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/sample-requests/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sample-requests", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "REQUEST_ID_HERE"
+                }
+              ]
+            },
+            "description": "Delete sample request (ADMIN only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Item Status",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"IN_SAMPLING\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/sample-requests/:requestId/items/:itemId/status",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "api",
+                "sample-requests",
+                ":requestId",
+                "items",
+                ":itemId",
+                "status"
+              ],
+              "variable": [
+                {
+                  "key": "requestId",
+                  "value": "REQUEST_ID_HERE"
+                },
+                {
+                  "key": "itemId",
+                  "value": "ITEM_ID_HERE"
+                }
+              ]
+            },
+            "description": "Update item status (SAMPLING_HEAD, ADMIN). Status values: REQUESTED, IN_SAMPLING, SENT, APPROVED, REJECTED"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Upload",
+      "item": [
+        {
+          "name": "Upload Files",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "files",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/upload",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "upload"]
+            },
+            "description": "Upload multiple files to ImageKit (All authenticated users)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Get Dashboard Statistics",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/dashboard/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "dashboard", "stats"]
+            },
+            "description": "Get dashboard statistics (All authenticated users)"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
