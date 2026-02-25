@@ -35,7 +35,9 @@ export class UserRepository {
   async findByEmail(email: string) {
     try {
       // Explicitly select password field since it's set to select: false in schema
-      const user = await User.findOne({ email }).select("+password");
+      const user = await User.findOne({ email, isDeleted: false }).select(
+        "+password",
+      );
       return user;
     } catch (error: any) {
       throw error;
@@ -49,9 +51,37 @@ export class UserRepository {
    */
   async findById(id: string | Types.ObjectId) {
     try {
-      const user = await User.findById(id);
+      const user = await User.findOne({ _id: id, isDeleted: false });
       return user;
     } catch (error: any) {
+      throw error;
+    }
+  }
+
+  /**
+   * Soft delete user
+   * @param id - User ID (ObjectId or string)
+   * @param deletedBy - User ID who is deleting the record
+   * @returns Soft deleted user document, or null if not found
+   * @throws CastError if invalid ObjectId format
+   */
+  async softDelete(id: string | Types.ObjectId, deletedBy: string) {
+    try {
+      const user = await User.findOneAndUpdate(
+        { _id: id, isDeleted: false },
+        {
+          isDeleted: true,
+          deletedAt: new Date(),
+          deletedBy,
+        },
+        { new: true },
+      );
+      return user;
+    } catch (error: any) {
+      // Handle CastError for invalid ObjectId
+      if (error.name === "CastError") {
+        throw error;
+      }
       throw error;
     }
   }

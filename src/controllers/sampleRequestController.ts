@@ -129,7 +129,8 @@ export class SampleRequestController {
   async delete(req: Request, res: Response, next: NextFunction) {
     try {
       const id = req.params.id as string;
-      await sampleRequestService.delete(id);
+      const userId = req.user!.userId;
+      await sampleRequestService.delete(id, userId);
       handleResponse(res, 200, "Sample request deleted successfully");
     } catch (error) {
       next(error);

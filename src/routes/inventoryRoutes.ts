@@ -65,4 +65,17 @@ router.put(
   inventoryController.update.bind(inventoryController),
 );
 
+/**
+ * DELETE /api/inventory/:id
+ * Soft delete inventory record
+ * Auth: Required
+ * Roles: ADMIN
+ */
+router.delete(
+  "/:id",
+  authenticate,
+  authorize(Role.ADMIN),
+  inventoryController.delete.bind(inventoryController),
+);
+
 export default router;

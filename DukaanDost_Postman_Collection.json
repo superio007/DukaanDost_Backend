@@ -1,17 +1,33 @@
 {
   "info": {
     "name": "DukaanDost Backend API",
-    "description": "Complete API collection for DukaanDost fabric sample ERP system",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    "description": "Complete API collection for DukaanDost fabric sample ERP system with pagination and soft delete support",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "2.0.0"
   },
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:5173",
+      "value": "http://localhost:5000",
       "type": "string"
     },
     {
       "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "inventoryId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "requestId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "itemId",
       "value": "",
       "type": "string"
     }
@@ -115,6 +131,22 @@
       "item": [
         {
           "name": "Create Inventory",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data._id) {",
+                  "        pm.collectionVariables.set('inventoryId', response.data._id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "auth": {
               "type": "bearer",
@@ -147,7 +179,7 @@
           "response": []
         },
         {
-          "name": "Get All Inventory",
+          "name": "Get All Inventory (Paginated)",
           "request": {
             "auth": {
               "type": "bearer",
@@ -162,11 +194,41 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/inventory",
+              "raw": "{{baseUrl}}/api/inventory?page=1&limit=10",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "inventory"]
+              "path": ["api", "inventory"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (default: 1)"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Items per page (default: 10, max: 100)"
+                },
+                {
+                  "key": "fabricName",
+                  "value": "Cotton",
+                  "description": "Filter by fabric name (partial match)",
+                  "disabled": true
+                },
+                {
+                  "key": "color",
+                  "value": "Blue",
+                  "description": "Filter by color (partial match)",
+                  "disabled": true
+                },
+                {
+                  "key": "gsm",
+                  "value": "180",
+                  "description": "Filter by exact GSM value",
+                  "disabled": true
+                }
+              ]
             },
-            "description": "Get all inventory records (All authenticated users)"
+            "description": "Get all inventory records with pagination and filters (All authenticated users)"
           },
           "response": []
         },
@@ -186,16 +248,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/inventory/:id",
+              "raw": "{{baseUrl}}/api/inventory/{{inventoryId}}",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "inventory", ":id"],
-              "variable": [
-                {
-                  "key": "id",
-                  "value": "699afebb269a3e6cf4f9fa64",
-                  "description": "Inventory ID"
-                }
-              ]
+              "path": ["api", "inventory", "{{inventoryId}}"]
             },
             "description": "Get a single inventory record by ID (All authenticated users)"
           },
@@ -223,20 +278,38 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"fabricName\": \"Cotton Blend\",\n  \"color\": \"Navy Blue\",\n  \"gsm\": 180,\n  \"availableMeters\": 450\n}"
+              "raw": "{\n  \"availableMeters\": 450\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/inventory/:id",
+              "raw": "{{baseUrl}}/api/inventory/{{inventoryId}}",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "inventory", ":id"],
-              "variable": [
+              "path": ["api", "inventory", "{{inventoryId}}"]
+            },
+            "description": "Update inventory record (ADMIN only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Inventory (Soft Delete)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
                 {
-                  "key": "id",
-                  "value": "INVENTORY_ID_HERE"
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
                 }
               ]
             },
-            "description": "Update inventory record (ADMIN only)"
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/inventory/{{inventoryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "inventory", "{{inventoryId}}"]
+            },
+            "description": "Soft delete inventory record (ADMIN only). Record is marked as deleted but not removed from database."
           },
           "response": []
         }
@@ -247,6 +320,25 @@
       "item": [
         {
           "name": "Create Sample Request",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data._id) {",
+                  "        pm.collectionVariables.set('requestId', response.data._id);",
+                  "        if (response.data.items && response.data.items.length > 0) {",
+                  "            pm.collectionVariables.set('itemId', response.data.items[0]._id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "auth": {
               "type": "bearer",
@@ -274,12 +366,12 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "sample-requests"]
             },
-            "description": "Create new sample request (SALES, ADMIN)"
+            "description": "Create new sample request (SALES, ADMIN). Priority: LOW, MEDIUM, HIGH"
           },
           "response": []
         },
         {
-          "name": "Get All Sample Requests",
+          "name": "Get All Sample Requests (Paginated)",
           "request": {
             "auth": {
               "type": "bearer",
@@ -300,30 +392,35 @@
               "query": [
                 {
                   "key": "page",
-                  "value": "1"
+                  "value": "1",
+                  "description": "Page number (default: 1)"
                 },
                 {
                   "key": "limit",
-                  "value": "10"
+                  "value": "10",
+                  "description": "Items per page (default: 10, max: 100)"
                 },
                 {
                   "key": "priority",
                   "value": "HIGH",
+                  "description": "Filter by priority (LOW, MEDIUM, HIGH)",
                   "disabled": true
                 },
                 {
                   "key": "status",
                   "value": "REQUESTED",
+                  "description": "Filter by status (REQUESTED, IN_SAMPLING, SENT, APPROVED, REJECTED)",
                   "disabled": true
                 },
                 {
                   "key": "buyerName",
                   "value": "ABC",
+                  "description": "Filter by buyer name (partial match)",
                   "disabled": true
                 }
               ]
             },
-            "description": "Get all sample requests with pagination and filters"
+            "description": "Get all sample requests with pagination and filters (All authenticated users)"
           },
           "response": []
         },
@@ -343,17 +440,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/sample-requests/:id",
+              "raw": "{{baseUrl}}/api/sample-requests/{{requestId}}",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "sample-requests", ":id"],
-              "variable": [
-                {
-                  "key": "id",
-                  "value": "REQUEST_ID_HERE"
-                }
-              ]
+              "path": ["api", "sample-requests", "{{requestId}}"]
             },
-            "description": "Get sample request by ID"
+            "description": "Get sample request by ID (All authenticated users)"
           },
           "response": []
         },
@@ -382,22 +473,16 @@
               "raw": "{\n  \"buyerName\": \"ABC Garments Ltd\",\n  \"contactPerson\": \"Jane Smith\",\n  \"requiredByDate\": \"2026-03-20\",\n  \"priority\": \"MEDIUM\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/sample-requests/:id",
+              "raw": "{{baseUrl}}/api/sample-requests/{{requestId}}",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "sample-requests", ":id"],
-              "variable": [
-                {
-                  "key": "id",
-                  "value": "REQUEST_ID_HERE"
-                }
-              ]
+              "path": ["api", "sample-requests", "{{requestId}}"]
             },
-            "description": "Update sample request (ADMIN only)"
+            "description": "Update sample request (SAMPLING_HEAD, ADMIN)"
           },
           "response": []
         },
         {
-          "name": "Delete Sample Request",
+          "name": "Delete Sample Request (Soft Delete)",
           "request": {
             "auth": {
               "type": "bearer",
@@ -412,17 +497,11 @@
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/sample-requests/:id",
+              "raw": "{{baseUrl}}/api/sample-requests/{{requestId}}",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "sample-requests", ":id"],
-              "variable": [
-                {
-                  "key": "id",
-                  "value": "REQUEST_ID_HERE"
-                }
-              ]
+              "path": ["api", "sample-requests", "{{requestId}}"]
             },
-            "description": "Delete sample request (ADMIN only)"
+            "description": "Soft delete sample request (ADMIN only). Record is marked as deleted but not removed from database."
           },
           "response": []
         },
@@ -451,28 +530,18 @@
               "raw": "{\n  \"status\": \"IN_SAMPLING\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/sample-requests/:requestId/items/:itemId/status",
+              "raw": "{{baseUrl}}/api/sample-requests/{{requestId}}/items/{{itemId}}/status",
               "host": ["{{baseUrl}}"],
               "path": [
                 "api",
                 "sample-requests",
-                ":requestId",
+                "{{requestId}}",
                 "items",
-                ":itemId",
+                "{{itemId}}",
                 "status"
-              ],
-              "variable": [
-                {
-                  "key": "requestId",
-                  "value": "REQUEST_ID_HERE"
-                },
-                {
-                  "key": "itemId",
-                  "value": "ITEM_ID_HERE"
-                }
               ]
             },
-            "description": "Update item status (SAMPLING_HEAD, ADMIN). Status values: REQUESTED, IN_SAMPLING, SENT, APPROVED, REJECTED"
+            "description": "Update item status (SAMPLING_HEAD, ADMIN). Status workflow: REQUESTED → IN_SAMPLING → SENT → APPROVED/REJECTED"
           },
           "response": []
         }
@@ -502,7 +571,8 @@
                 {
                   "key": "files",
                   "type": "file",
-                  "src": []
+                  "src": [],
+                  "description": "Select one or more files to upload (max 5MB each)"
                 }
               ]
             },
@@ -511,7 +581,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "upload"]
             },
-            "description": "Upload multiple files to ImageKit (All authenticated users)"
+            "description": "Upload multiple files to ImageKit (All authenticated users). Returns array of file URLs."
           },
           "response": []
         }
@@ -540,7 +610,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "dashboard", "stats"]
             },
-            "description": "Get dashboard statistics (All authenticated users)"
+            "description": "Get dashboard statistics: total requests, pending samples, sent today, approval rate (All authenticated users)"
           },
           "response": []
         }

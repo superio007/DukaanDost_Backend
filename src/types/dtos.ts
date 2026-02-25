@@ -68,6 +68,12 @@ export interface SampleRequestFilters {
   priority?: Priority;
 }
 
+export interface InventoryFilters {
+  fabricName?: string;
+  color?: string;
+  gsm?: number;
+}
+
 export interface DashboardStats {
   totalSampleRequests: number;
   pendingSamples: number;

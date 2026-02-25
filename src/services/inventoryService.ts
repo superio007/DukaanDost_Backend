@@ -1,5 +1,10 @@
 import { inventoryRepository } from "../repositories/inventoryRepository.js";
-import { CreateInventoryDTO, UpdateInventoryDTO } from "../types/dtos.js";
+import {
+  CreateInventoryDTO,
+  UpdateInventoryDTO,
+  PaginationDTO,
+  InventoryFilters,
+} from "../types/dtos.js";
 
 /**
  * Inventory Service
@@ -18,11 +23,13 @@ export class InventoryService {
   }
 
   /**
-   * Retrieve all inventory records
-   * @returns Array of all inventory documents
+   * Retrieve all inventory records with filtering and pagination
+   * @param filters - Optional filters (fabricName, color, gsm)
+   * @param pagination - Pagination parameters (page, limit)
+   * @returns Object containing inventory array, total count, page, and totalPages
    */
-  async findAll() {
-    return await inventoryRepository.findAll();
+  async findAll(filters: InventoryFilters, pagination: PaginationDTO) {
+    return await inventoryRepository.findAll(filters, pagination);
   }
 
   /**
@@ -52,6 +59,19 @@ export class InventoryService {
       throw new Error("Inventory not found");
     }
     return inventory;
+  }
+
+  /**
+   * Soft delete inventory record
+   * @param id - Inventory ID
+   * @param deletedBy - User ID who is deleting the record
+   * @throws Error if inventory not found
+   */
+  async delete(id: string, deletedBy: string) {
+    const inventory = await inventoryRepository.softDelete(id, deletedBy);
+    if (!inventory) {
+      throw new Error("Inventory not found");
+    }
   }
 
   /**

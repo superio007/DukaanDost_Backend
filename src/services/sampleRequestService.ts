@@ -6,7 +6,7 @@ import {
   SampleRequestFilters,
   PaginationDTO,
 } from "../types/dtos.js";
-import { ItemStatus } from "../types/enums.js";
+import { ItemStatus, Role } from "../types/enums.js";
 import { NotFoundError, ValidationError } from "../middleware/errorHandler.js";
 
 /**
@@ -43,19 +43,42 @@ export class SampleRequestService {
 
   /**
    * Find all sample requests with filtering and pagination
+   * Role-based filtering: SALES users see only their own requests
+   * SAMPLING_HEAD and ADMIN see all requests
    */
-  async findAll(filters: SampleRequestFilters, pagination: PaginationDTO) {
+  async findAll(
+    filters: SampleRequestFilters,
+    pagination: PaginationDTO,
+    userId: string,
+    userRole: Role,
+  ) {
+    // If user is SALES, filter by their userId
+    if (userRole === Role.SALES) {
+      filters.createdBy = userId;
+    }
+    // SAMPLING_HEAD and ADMIN see all requests (no additional filter)
+
     return await sampleRequestRepository.findAll(filters, pagination);
   }
 
   /**
    * Find sample request by ID
+   * Role-based access: SALES users can only view their own requests
+   * SAMPLING_HEAD and ADMIN can view all requests
    */
-  async findById(id: string) {
+  async findById(id: string, userId: string, userRole: Role) {
     const sampleRequest = await sampleRequestRepository.findById(id);
     if (!sampleRequest) {
       throw new NotFoundError("Sample request not found");
     }
+
+    // If user is SALES, verify they created this request
+    if (userRole === Role.SALES) {
+      if (sampleRequest.createdBy.toString() !== userId) {
+        throw new NotFoundError("Sample request not found");
+      }
+    }
+
     return sampleRequest;
   }
 
@@ -124,8 +147,8 @@ export class SampleRequestService {
   /**
    * Delete sample request
    */
-  async delete(id: string) {
-    const sampleRequest = await sampleRequestRepository.delete(id);
+  async delete(id: string, userId: string) {
+    const sampleRequest = await sampleRequestRepository.softDelete(id, userId);
     if (!sampleRequest) {
       throw new NotFoundError("Sample request not found");
     }

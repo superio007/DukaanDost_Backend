@@ -37,7 +37,7 @@ export class SampleRequestRepository {
   async findAll(filters: SampleRequestFilters, pagination: PaginationDTO) {
     try {
       const { page = 1, limit = 10 } = pagination;
-      const query: any = {};
+      const query: any = { isDeleted: false };
 
       // Apply filters with sanitization to prevent NoSQL injection
       if (filters.buyerName) {
@@ -88,7 +88,10 @@ export class SampleRequestRepository {
    */
   async findById(id: string | Types.ObjectId) {
     try {
-      const sampleRequest = await SampleRequest.findById(id)
+      const sampleRequest = await SampleRequest.findOne({
+        _id: id,
+        isDeleted: false,
+      })
         .populate("createdBy", "name email role")
         .populate("items.statusHistory.updatedBy", "name email role");
       return sampleRequest;
@@ -114,8 +117,8 @@ export class SampleRequestRepository {
     updateData: UpdateSampleRequestDTO,
   ) {
     try {
-      const sampleRequest = await SampleRequest.findByIdAndUpdate(
-        id,
+      const sampleRequest = await SampleRequest.findOneAndUpdate(
+        { _id: id, isDeleted: false },
         updateData,
         {
           new: true, // Return updated document
@@ -160,6 +163,7 @@ export class SampleRequestRepository {
         {
           _id: requestId,
           "items._id": itemId,
+          isDeleted: false,
         },
         {
           $set: {
@@ -192,10 +196,39 @@ export class SampleRequestRepository {
   }
 
   /**
-   * Delete sample request
+   * Soft delete sample request
+   * @param id - Sample request ID (ObjectId or string)
+   * @param deletedBy - User ID who is deleting the record
+   * @returns Soft deleted sample request document, or null if not found
+   * @throws CastError if invalid ObjectId format
+   */
+  async softDelete(id: string | Types.ObjectId, deletedBy: string) {
+    try {
+      const sampleRequest = await SampleRequest.findOneAndUpdate(
+        { _id: id, isDeleted: false },
+        {
+          isDeleted: true,
+          deletedAt: new Date(),
+          deletedBy,
+        },
+        { new: true },
+      );
+      return sampleRequest;
+    } catch (error: any) {
+      // Handle CastError for invalid ObjectId
+      if (error.name === "CastError") {
+        throw error;
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Delete sample request (kept for backward compatibility, now uses soft delete)
    * @param id - Sample request ID (ObjectId or string)
    * @returns Deleted sample request document, or null if not found
    * @throws CastError if invalid ObjectId format
+   * @deprecated Use softDelete instead
    */
   async delete(id: string | Types.ObjectId) {
     try {

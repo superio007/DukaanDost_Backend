@@ -1,5 +1,10 @@
 import { Inventory } from "../models/Inventory.js";
-import { CreateInventoryDTO, UpdateInventoryDTO } from "../types/dtos.js";
+import {
+  CreateInventoryDTO,
+  UpdateInventoryDTO,
+  PaginationDTO,
+  InventoryFilters,
+} from "../types/dtos.js";
 import { Types } from "mongoose";
 
 export class InventoryRepository {
@@ -28,13 +33,54 @@ export class InventoryRepository {
   }
 
   /**
-   * Find all inventory records
-   * @returns Array of all inventory documents
+   * Find all inventory records with filtering and pagination
+   * @param filters - Optional filters (fabricName, color, gsm)
+   * @param pagination - Pagination parameters (page, limit)
+   * @returns Object containing inventory array, total count, page, and totalPages
    */
-  async findAll() {
+  async findAll(filters: InventoryFilters, pagination: PaginationDTO) {
     try {
-      const inventory = await Inventory.find().sort({ createdAt: -1 });
-      return inventory;
+      const { page = 1, limit = 10 } = pagination;
+      const query: any = { isDeleted: false };
+
+      // Apply filters
+      if (filters.fabricName) {
+        const sanitizedFabricName = filters.fabricName.replace(
+          /[.*+?^${}()|[\]\\]/g,
+          "\\$&",
+        );
+        query.fabricName = { $regex: sanitizedFabricName, $options: "i" };
+      }
+      if (filters.color) {
+        const sanitizedColor = filters.color.replace(
+          /[.*+?^${}()|[\]\\]/g,
+          "\\$&",
+        );
+        query.color = { $regex: sanitizedColor, $options: "i" };
+      }
+      if (filters.gsm !== undefined) {
+        query.gsm = filters.gsm;
+      }
+
+      // Calculate skip for pagination
+      const skip = (page - 1) * limit;
+
+      // Execute query with pagination
+      const inventory = await Inventory.find(query)
+        .skip(skip)
+        .limit(limit)
+        .sort({ createdAt: -1 });
+
+      // Get total count for pagination
+      const total = await Inventory.countDocuments(query);
+      const totalPages = Math.ceil(total / limit);
+
+      return {
+        inventory,
+        total,
+        page,
+        totalPages,
+      };
     } catch (error: any) {
       throw error;
     }
@@ -50,16 +96,48 @@ export class InventoryRepository {
    */
   async update(id: string | Types.ObjectId, updateData: UpdateInventoryDTO) {
     try {
-      const inventory = await Inventory.findByIdAndUpdate(id, updateData, {
-        new: true, // Return updated document
-        runValidators: true, // Run schema validators
-      });
+      const inventory = await Inventory.findOneAndUpdate(
+        { _id: id, isDeleted: false },
+        updateData,
+        {
+          new: true, // Return updated document
+          runValidators: true, // Run schema validators
+        },
+      );
       return inventory;
     } catch (error: any) {
       // Handle Mongoose ValidationError
       if (error.name === "ValidationError") {
         throw error;
       }
+      // Handle CastError for invalid ObjectId
+      if (error.name === "CastError") {
+        throw error;
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Soft delete inventory record
+   * @param id - Inventory ID (ObjectId or string)
+   * @param deletedBy - User ID who is deleting the record
+   * @returns Soft deleted inventory document, or null if not found
+   * @throws CastError if invalid ObjectId format
+   */
+  async softDelete(id: string | Types.ObjectId, deletedBy: string) {
+    try {
+      const inventory = await Inventory.findOneAndUpdate(
+        { _id: id, isDeleted: false },
+        {
+          isDeleted: true,
+          deletedAt: new Date(),
+          deletedBy,
+        },
+        { new: true },
+      );
+      return inventory;
+    } catch (error: any) {
       // Handle CastError for invalid ObjectId
       if (error.name === "CastError") {
         throw error;
@@ -91,6 +169,7 @@ export class InventoryRepository {
           fabricName,
           color,
           gsm,
+          isDeleted: false,
           availableMeters: { $gte: meters }, // Ensure sufficient stock
         },
         {
@@ -115,7 +194,7 @@ export class InventoryRepository {
    */
   async findById(id: string | Types.ObjectId) {
     try {
-      const inventory = await Inventory.findById(id);
+      const inventory = await Inventory.findOne({ _id: id, isDeleted: false });
       return inventory;
     } catch (error: any) {
       // Handle CastError for invalid ObjectId
@@ -139,6 +218,7 @@ export class InventoryRepository {
         fabricName,
         color,
         gsm,
+        isDeleted: false,
       });
       return inventory;
     } catch (error: any) {
