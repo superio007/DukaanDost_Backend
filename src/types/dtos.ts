@@ -66,6 +66,7 @@ export interface SampleRequestFilters {
   buyerName?: string;
   status?: ItemStatus;
   priority?: Priority;
+  createdBy?: string;
 }
 
 export interface InventoryFilters {

@@ -30,6 +30,7 @@ export class SampleRequestController {
   /**
    * Get all sample requests with filtering and pagination
    * GET /api/sample-requests
+   * Role-based filtering: SALES users see only their own requests
    */
   async findAll(req: Request, res: Response, next: NextFunction) {
     try {
@@ -44,7 +45,15 @@ export class SampleRequestController {
         limit: parseInt(req.query.limit as string) || 10,
       };
 
-      const result = await sampleRequestService.findAll(filters, pagination);
+      const userId = req.user!.userId;
+      const userRole = req.user!.role;
+
+      const result = await sampleRequestService.findAll(
+        filters,
+        pagination,
+        userId,
+        userRole,
+      );
       handleResponse(
         res,
         200,
@@ -59,11 +68,19 @@ export class SampleRequestController {
   /**
    * Get sample request by ID
    * GET /api/sample-requests/:id
+   * Role-based access: SALES users can only view their own requests
    */
   async findById(req: Request, res: Response, next: NextFunction) {
     try {
       const id = req.params.id as string;
-      const sampleRequest = await sampleRequestService.findById(id);
+      const userId = req.user!.userId;
+      const userRole = req.user!.role;
+
+      const sampleRequest = await sampleRequestService.findById(
+        id,
+        userId,
+        userRole,
+      );
       handleResponse(
         res,
         200,

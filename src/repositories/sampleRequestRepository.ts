@@ -54,6 +54,9 @@ export class SampleRequestRepository {
       if (filters.status) {
         query["items.status"] = filters.status;
       }
+      if (filters.createdBy) {
+        query.createdBy = filters.createdBy;
+      }
 
       // Calculate skip for pagination
       const skip = (page - 1) * limit;

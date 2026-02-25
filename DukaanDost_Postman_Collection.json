@@ -1,9 +1,9 @@
 {
   "info": {
     "name": "DukaanDost Backend API",
-    "description": "Complete API collection for DukaanDost fabric sample ERP system with pagination and soft delete support",
+    "description": "Complete API collection for DukaanDost fabric sample ERP system with pagination, soft delete, and role-based access control. SALES users see only their own requests, while ADMIN and SAMPLING_HEAD see all requests.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "version": "2.0.0"
+    "version": "2.1.0"
   },
   "variable": [
     {

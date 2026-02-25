@@ -52,13 +52,16 @@ export class SampleRequestService {
     userId: string,
     userRole: Role,
   ) {
+    // Create a new filters object to avoid modifying the parameter
+    const queryFilters = { ...filters };
+
     // If user is SALES, filter by their userId
     if (userRole === Role.SALES) {
-      filters.createdBy = userId;
+      queryFilters.createdBy = userId;
     }
     // SAMPLING_HEAD and ADMIN see all requests (no additional filter)
 
-    return await sampleRequestRepository.findAll(filters, pagination);
+    return await sampleRequestRepository.findAll(queryFilters, pagination);
   }
 
   /**
