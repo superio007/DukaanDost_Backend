@@ -23,6 +23,169 @@ export class InventoryService {
   }
 
   /**
+   * Add stock back to inventory with atomic operation
+   * This method adds stock back when sample request quantities are reduced or items are removed
+   * @param fabricName - Fabric name
+   * @param color - Fabric color
+   * @param gsm - Fabric GSM (grams per square meter)
+   * @param meters - Meters to add back
+   * @throws Error if inventory not found
+   */
+  async addStock(
+    fabricName: string,
+    color: string,
+    gsm: number,
+    meters: number,
+  ): Promise<void> {
+    // First check if inventory exists
+    const inventory = await inventoryRepository.findByFabric(
+      fabricName,
+      color,
+      gsm,
+    );
+
+    if (!inventory) {
+      throw new Error(
+        `Inventory not found for fabric: ${fabricName}, color: ${color}, gsm: ${gsm}`,
+      );
+    }
+
+    // Perform atomic addition
+    const updatedInventory = await inventoryRepository.addStock(
+      fabricName,
+      color,
+      gsm,
+      meters,
+    );
+
+    // If atomic operation failed
+    if (!updatedInventory) {
+      throw new Error(`Failed to add stock back to inventory.`);
+    }
+  }
+
+  /**
+   * Deduct stock when status changes to SENT
+   * Creates transaction log for audit trail
+   */
+  async deductStockOnSent(
+    fabricName: string,
+    color: string,
+    gsm: number,
+    meters: number,
+    requestId: string,
+    itemId: string,
+    userId: string,
+  ): Promise<void> {
+    // Get inventory to record previous quantity
+    const inventory = await inventoryRepository.findByFabric(
+      fabricName,
+      color,
+      gsm,
+    );
+
+    if (!inventory) {
+      throw new Error(
+        `Inventory not found for fabric: ${fabricName}, color: ${color}, gsm: ${gsm}`,
+      );
+    }
+
+    // Check availability
+    if (inventory.availableMeters < meters) {
+      throw new Error(
+        `Insufficient stock. Available: ${inventory.availableMeters} meters, Required: ${meters} meters`,
+      );
+    }
+
+    const previousQuantity = inventory.availableMeters;
+
+    // Perform atomic deduction
+    const updatedInventory = await inventoryRepository.deductStock(
+      fabricName,
+      color,
+      gsm,
+      meters,
+    );
+
+    if (!updatedInventory) {
+      throw new Error(
+        `Insufficient stock. Another process may have deducted stock concurrently.`,
+      );
+    }
+
+    // Create transaction log
+    const { InventoryTransaction } =
+      await import("../models/InventoryTransaction.js");
+    await InventoryTransaction.create({
+      inventoryId: inventory._id,
+      requestId,
+      itemId,
+      transactionType: "DEDUCT",
+      quantity: meters,
+      previousQuantity,
+      newQuantity: updatedInventory.availableMeters,
+      performedBy: userId,
+      reason: "Sample request status changed to SENT",
+    });
+  }
+
+  /**
+   * Restore stock when status changes from SENT
+   * Creates transaction log for audit trail
+   */
+  async restoreStockOnStatusChange(
+    fabricName: string,
+    color: string,
+    gsm: number,
+    meters: number,
+    requestId: string,
+    itemId: string,
+    userId: string,
+  ): Promise<void> {
+    // Get inventory to record previous quantity
+    const inventory = await inventoryRepository.findByFabric(
+      fabricName,
+      color,
+      gsm,
+    );
+
+    if (!inventory) {
+      throw new Error(
+        `Inventory not found for fabric: ${fabricName}, color: ${color}, gsm: ${gsm}`,
+      );
+    }
+
+    const previousQuantity = inventory.availableMeters;
+
+    // Perform atomic addition
+    const updatedInventory = await inventoryRepository.addStock(
+      fabricName,
+      color,
+      gsm,
+      meters,
+    );
+
+    if (!updatedInventory) {
+      throw new Error(`Failed to restore stock to inventory.`);
+    }
+
+    // Create transaction log
+    const { InventoryTransaction } =
+      await import("../models/InventoryTransaction.js");
+    await InventoryTransaction.create({
+      inventoryId: inventory._id,
+      requestId,
+      itemId,
+      transactionType: "RESTORE",
+      quantity: meters,
+      previousQuantity,
+      newQuantity: updatedInventory.availableMeters,
+      performedBy: userId,
+      reason: "Sample request status changed from SENT",
+    });
+  }
+
+  /**
    * Retrieve all inventory records with filtering and pagination
    * @param filters - Optional filters (fabricName, color, gsm)
    * @param pagination - Pagination parameters (page, limit)

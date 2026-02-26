@@ -225,6 +225,44 @@ export class InventoryRepository {
       throw error;
     }
   }
+
+  /**
+   * Add stock back to inventory using atomic operations
+   * This method uses MongoDB's atomic $inc operator to safely add stock back
+   * @param fabricName - Fabric name
+   * @param color - Fabric color
+   * @param gsm - Fabric GSM (grams per square meter)
+   * @param meters - Meters to add back
+   * @returns Updated inventory document, or null if not found
+   */
+  async addStock(
+    fabricName: string,
+    color: string,
+    gsm: number,
+    meters: number,
+  ) {
+    try {
+      // Atomic operation to add stock back
+      const inventory = await Inventory.findOneAndUpdate(
+        {
+          fabricName,
+          color,
+          gsm,
+          isDeleted: false,
+        },
+        {
+          $inc: { availableMeters: meters }, // Atomic increment
+        },
+        {
+          new: true, // Return updated document
+          runValidators: true, // Run schema validators
+        },
+      );
+      return inventory;
+    } catch (error: any) {
+      throw error;
+    }
+  }
 }
 
 export const inventoryRepository = new InventoryRepository();

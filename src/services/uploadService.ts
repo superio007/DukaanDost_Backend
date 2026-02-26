@@ -49,6 +49,65 @@ class UploadService {
   }
 
   /**
+   * Delete a single file from ImageKit
+   * @param fileUrl - ImageKit file URL
+   * @returns Promise<void>
+   */
+  async deleteFile(fileUrl: string): Promise<void> {
+    try {
+      // Extract fileId from URL
+      const fileId = this.extractFileIdFromUrl(fileUrl);
+
+      if (!fileId) {
+        console.warn(`Could not extract fileId from URL: ${fileUrl}`);
+        return;
+      }
+
+      await this.imagekit.deleteFile(fileId);
+    } catch (error: any) {
+      console.error(`Failed to delete file from ImageKit: ${fileUrl}`, error);
+      // Don't throw error - log and continue
+      // This prevents deletion failures from blocking the main operation
+    }
+  }
+
+  /**
+   * Delete multiple files from ImageKit
+   * @param fileUrls - Array of ImageKit file URLs
+   * @returns Promise<void>
+   */
+  async deleteFiles(fileUrls: string[]): Promise<void> {
+    const deletePromises = fileUrls.map((url) => this.deleteFile(url));
+    await Promise.allSettled(deletePromises);
+  }
+
+  /**
+   * Extract fileId from ImageKit URL
+   * @param fileUrl - ImageKit file URL
+   * @returns fileId or null
+   */
+  private extractFileIdFromUrl(fileUrl: string): string | null {
+    try {
+      // ImageKit URL format: https://ik.imagekit.io/your_imagekit_id/path/to/file.jpg
+      // We need to extract the path after the imagekit_id
+      const urlObj = new URL(fileUrl);
+      const pathname = urlObj.pathname;
+
+      // Remove leading slash and get the path after imagekit_id
+      const parts = pathname.split("/").filter(Boolean);
+      if (parts.length >= 2) {
+        // Join all parts after the imagekit_id
+        return parts.slice(1).join("/");
+      }
+
+      return null;
+    } catch (error) {
+      console.error("Error extracting fileId from URL:", error);
+      return null;
+    }
+  }
+
+  /**
    * Validate file type and size
    * @param file - Multer file object
    * @throws PayloadTooLargeError if file exceeds size limit

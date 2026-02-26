@@ -99,7 +99,12 @@ export class SampleRequestController {
   async update(req: Request, res: Response, next: NextFunction) {
     try {
       const id = req.params.id as string;
-      const sampleRequest = await sampleRequestService.update(id, req.body);
+      const userId = req.user!.userId;
+      const sampleRequest = await sampleRequestService.update(
+        id,
+        req.body,
+        userId,
+      );
       handleResponse(
         res,
         200,

@@ -12,6 +12,7 @@ import sampleRequestRoutes from "./routes/sampleRequestRoutes.js";
 import inventoryRoutes from "./routes/inventoryRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
+import buyerRoutes from "./routes/buyerRoutes.js";
 
 // Load environment variables
 dotenv.config();
@@ -74,6 +75,7 @@ app.use("/api/sample-requests", sampleRequestRoutes);
 app.use("/api/inventory", inventoryRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/buyers", buyerRoutes);
 
 // Global error handler middleware (must be last)
 app.use(errorHandler);

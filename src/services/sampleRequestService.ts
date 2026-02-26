@@ -17,6 +17,7 @@ export class SampleRequestService {
   /**
    * Create a new sample request
    * Initializes items with REQUESTED status and statusHistory
+   * NOTE: Inventory is NOT deducted at creation - only when status changes to SENT
    */
   async create(requestData: CreateSampleRequestDTO, userId: string) {
     // Initialize items with REQUESTED status and statusHistory
@@ -37,6 +38,9 @@ export class SampleRequestService {
       items: itemsWithStatus,
       createdBy: userId,
     };
+
+    // NOTE: Inventory deduction removed from here
+    // It will be deducted when status changes to SENT
 
     return await sampleRequestRepository.create(dataWithCreator);
   }
@@ -87,8 +91,72 @@ export class SampleRequestService {
 
   /**
    * Update sample request
+   * Handles inventory deduction when item status transitions to/from SENT
    */
-  async update(id: string, updateData: UpdateSampleRequestDTO) {
+  async update(
+    id: string,
+    updateData: UpdateSampleRequestDTO,
+    userId?: string,
+  ) {
+    // Get existing request
+    const existingRequest = await sampleRequestRepository.findById(id);
+    if (!existingRequest) {
+      throw new NotFoundError("Sample request not found");
+    }
+
+    // Check for status transitions in items and handle inventory
+    if (updateData.items) {
+      for (const updatedItem of updateData.items) {
+        // Find the corresponding existing item
+        const existingItem = existingRequest.items.find(
+          (item: any) => item._id.toString() === updatedItem._id?.toString(),
+        );
+
+        if (existingItem && updatedItem.status) {
+          const oldStatus = existingItem.status;
+          const newStatus = updatedItem.status;
+
+          // Only process if status actually changed
+          if (oldStatus !== newStatus) {
+            // Validate status transition
+            this.validateStatusTransition(oldStatus, newStatus);
+
+            // Handle inventory based on status transition
+            if (
+              newStatus === ItemStatus.SENT &&
+              oldStatus !== ItemStatus.SENT
+            ) {
+              // Transitioning TO "SENT" - deduct inventory
+              await inventoryService.deductStockOnSent(
+                updatedItem.fabricName || existingItem.fabricName,
+                updatedItem.color || existingItem.color,
+                updatedItem.gsm || existingItem.gsm,
+                updatedItem.requiredMeters || existingItem.requiredMeters,
+                id,
+                updatedItem._id!,
+                userId || existingRequest.createdBy.toString(),
+              );
+            } else if (
+              oldStatus === ItemStatus.SENT &&
+              newStatus !== ItemStatus.SENT
+            ) {
+              // Transitioning FROM "SENT" - restore inventory
+              await inventoryService.restoreStockOnStatusChange(
+                updatedItem.fabricName || existingItem.fabricName,
+                updatedItem.color || existingItem.color,
+                updatedItem.gsm || existingItem.gsm,
+                updatedItem.requiredMeters || existingItem.requiredMeters,
+                id,
+                updatedItem._id!,
+                userId || existingRequest.createdBy.toString(),
+              );
+            }
+          }
+        }
+      }
+    }
+
+    // Update the sample request
     const sampleRequest = await sampleRequestRepository.update(id, updateData);
     if (!sampleRequest) {
       throw new NotFoundError("Sample request not found");
@@ -96,9 +164,6 @@ export class SampleRequestService {
     return sampleRequest;
   }
 
-  /**
-   * Update item status with validation and inventory deduction
-   */
   async updateItemStatus(
     requestId: string,
     itemId: string,
@@ -119,8 +184,38 @@ export class SampleRequestService {
       throw new NotFoundError("Item not found");
     }
 
+    const previousStatus = item.status;
+
     // Validate status transition
-    this.validateStatusTransition(item.status, status);
+    this.validateStatusTransition(previousStatus, status);
+
+    // Handle inventory deduction/restoration based on status change
+    if (status === ItemStatus.SENT && previousStatus !== ItemStatus.SENT) {
+      // Changing TO "SENT" - deduct inventory
+      await inventoryService.deductStockOnSent(
+        item.fabricName,
+        item.color,
+        item.gsm,
+        item.requiredMeters,
+        requestId,
+        itemId,
+        userId,
+      );
+    } else if (
+      previousStatus === ItemStatus.SENT &&
+      status !== ItemStatus.SENT
+    ) {
+      // Changing FROM "SENT" to another status - restore inventory
+      await inventoryService.restoreStockOnStatusChange(
+        item.fabricName,
+        item.color,
+        item.gsm,
+        item.requiredMeters,
+        requestId,
+        itemId,
+        userId,
+      );
+    }
 
     // Update item status
     const updatedRequest = await sampleRequestRepository.updateItemStatus(
@@ -134,25 +229,37 @@ export class SampleRequestService {
       throw new NotFoundError("Sample request not found");
     }
 
-    // Trigger inventory deduction if status changed to SENT
-    if (status === ItemStatus.SENT) {
-      await inventoryService.deductStock(
-        item.fabricName,
-        item.color,
-        item.gsm,
-        item.requiredMeters,
-      );
-    }
-
     return updatedRequest;
   }
 
   /**
    * Delete sample request
    */
+  /**
+   * Delete sample request
+   * Also deletes associated attachments from ImageKit
+   */
   async delete(id: string, userId: string) {
-    const sampleRequest = await sampleRequestRepository.softDelete(id, userId);
+    // Get the sample request first to access attachments
+    const sampleRequest = await sampleRequestRepository.findById(id);
     if (!sampleRequest) {
+      throw new NotFoundError("Sample request not found");
+    }
+
+    // Delete attachments from ImageKit if they exist
+    if (sampleRequest.attachments && sampleRequest.attachments.length > 0) {
+      try {
+        const { uploadService } = await import("./uploadService.js");
+        await uploadService.deleteFiles(sampleRequest.attachments);
+      } catch (error) {
+        console.error("Failed to delete attachments from ImageKit:", error);
+        // Continue with deletion even if attachment deletion fails
+      }
+    }
+
+    // Soft delete the sample request
+    const deletedRequest = await sampleRequestRepository.softDelete(id, userId);
+    if (!deletedRequest) {
       throw new NotFoundError("Sample request not found");
     }
   }
